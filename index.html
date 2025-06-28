@@ -1,1 +1,99 @@
-<!doctypehtml><html lang=es><meta charset=UTF-8><meta content="width=device-width,initial-scale=1"name=viewport><meta content="Dietética Axel y Javi"property=og:title><meta content="🛵 Te llevamos el pedido a tu casa"property=og:description><meta content=https://dieteticaaxelyjavi.github.io/img/logo.png property=og:image><meta content=https://dieteticaaxelyjavi.github.io/ property=og:url><meta content=website property=og:type><title>Dietética Axel y Javi</title><link href=img/almendras.png rel=icon type=image/png><link href=css/estilos.css rel=stylesheet><header class=header><img alt="Logo de la Dietética Axel y Javi"src=img/logo.png class=logo></header><div class=filter-container><div class=filter-input-wrapper><input id=filter-input placeholder=Buscar...> <span id=clear-filter>×</span></div><div class=tags-container><button class=tag>Ofertas</button> <button class=tag>Novedades✨</button> <button class=tag>Sin TACC</button> <button class=tag>Frutos secos</button> <button class=tag>Yerba🧉</button> <button class=tag>Miel🍯</button> <button class=tag>Yuyitos🌿</button> <button class=tag>Aceites</button> <button class=tag>Cereales🍚</button> <button class=tag>Suplementos</button> <button class=tag>Legumbres🫘</button> <button class=tag>Harinas</button> <button class=tag>Semillas</button> <button class=tag>Condimentos</button> <button class=tag>Especias</button> <button class=tag>Hierbas🌿</button> <button class=tag>Snacks🍪</button> <button class=tag>Hongos🍄</button> <button class=tag>Chocolate🍫</button> <button class=tag>Leches vegetales</button> <button class=tag>Orgánico</button> <button class=tag>Agroecológico</button></div></div><ul class=productos-lista></ul><a aria-label="Enviar mensaje por WhatsApp"class=fab href="https://api.whatsapp.com/send/?phone=5491133417868"target=_blank><img alt="Icono de WhatsApp"src=img/whatsapp.png></a><script src=js/main.js></script>
+<!doctypehtml><html lang=es><meta charset=UTF-8><meta content="width=device-width,initial-scale=1"name=viewport><meta content="Dietética Axel y Javi"property=og:title><meta content="🛵 Te llevamos el pedido a tu casa"property=og:description><meta content=https://dieteticaaxelyjavi.github.io/img/logo.png property=og:image><meta content=https://dieteticaaxelyjavi.github.io/ property=og:url><meta content=website property=og:type><title>Dietética Axel y Javi</title><link href=img/almendras.png rel=icon type=image/png><link href=css/estilos.css rel=stylesheet><header class=header><img alt="Logo de la Dietética Axel y Javi"src=img/logo.png class=logo></header><div class=filter-container><div class=filter-input-wrapper><input autocomplete=off id=filter-input placeholder=Buscar...> <span id=clear-filter>×</span></div><div class=tags-container id=tags-container></div></div><ul class=productos-lista></ul><a aria-label="Enviar mensaje por WhatsApp"class=fab href="https://api.whatsapp.com/send/?phone=5491133417868"target=_blank><img alt="Icono de WhatsApp"src=img/whatsapp.png></a><script src=js/main.js></script><script>document.addEventListener("contextmenu",function(e){e.preventDefault()},!1)</script><script>document.addEventListener('DOMContentLoaded', () => {
+    cargarEtiquetasDesdeCSV();
+});
+
+async function cargarEtiquetasDesdeCSV() {
+    const urlCSV = 'https://raw.githubusercontent.com/dieteticaaxelyjavi/productos/main/etiquetas';
+    try {
+        const respuesta = await fetch(urlCSV);
+        const texto = await respuesta.text();
+
+        const lineas = texto.trim().split('\n');
+        const etiquetas = lineas.map(l => l.trim());
+
+        const contenedor = document.getElementById('tags-container');
+        contenedor.innerHTML = '';
+
+        etiquetas.forEach(etiqueta => {
+            const boton = document.createElement('button');
+            boton.className = 'tag';
+            boton.textContent = etiqueta;
+            contenedor.appendChild(boton);
+        });
+
+        inicializarEventosTags();
+
+    } catch (error) {
+        console.error('Error al cargar las etiquetas:', error);
+    }
+}
+
+function inicializarEventosTags() {
+    const tagsContainer = document.querySelector('.tags-container');
+    const inputFiltro = document.getElementById('filter-input');
+
+    // Eliminar botón toggle si existe
+    const oldToggle = document.getElementById('toggle-tags');
+    if (oldToggle) oldToggle.remove();
+
+    // Crear botón toggle
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'tag toggle-tag';
+    toggleBtn.textContent = '+';
+    toggleBtn.id = 'toggle-tags';
+    tagsContainer.appendChild(toggleBtn);
+
+    // Recolectar tags (excluye toggle por ahora)
+    let tags = Array.from(tagsContainer.querySelectorAll('.tag')).filter(tag => tag.id !== 'toggle-tags');
+
+    // Reagrega el botón al final para medir correctamente
+    const allTags = [...tags, toggleBtn];
+
+    function ajustarTagsUnaLinea() {
+        // Mostrar todos inicialmente para medir
+        allTags.forEach(tag => tag.style.display = 'inline-block');
+
+        const baseTop = allTags[0]?.offsetTop ?? 0;
+
+        // Ocultar todos los que no estén en la primera línea
+        let i = tags.length - 1;
+
+        while (toggleBtn.offsetTop > baseTop && i >= 0) {
+            tags[i].style.display = 'none';
+            i--;
+        }
+
+        // Mostrar u ocultar el botón según si hay elementos ocultos
+        const hayOcultos = tags.some(tag => tag.style.display === 'none');
+        toggleBtn.textContent = hayOcultos ? '+' : '';
+        toggleBtn.style.display = hayOcultos ? 'inline-block' : 'none';
+    }
+
+    function expandirTags() {
+        tags.forEach(tag => tag.style.display = 'inline-block');
+        toggleBtn.textContent = '-';
+    }
+
+    function colapsarTags() {
+        ajustarTagsUnaLinea();
+    }
+
+    toggleBtn.onclick = () => {
+        const expandido = toggleBtn.textContent === '+';
+        if (expandido) expandirTags();
+        else colapsarTags();
+    };
+
+    tags.forEach(tag => {
+        tag.addEventListener('click', () => {
+            inputFiltro.value = inputFiltro.value === tag.textContent ? '' : tag.textContent;
+            filtrarProductos();
+            colapsarTags(); // Siempre colapsar después de seleccionar
+        });
+    });
+
+    // Ejecutar al inicio y al redimensionar
+    const recalcular = () => requestAnimationFrame(ajustarTagsUnaLinea);
+    recalcular();
+    window.addEventListener('resize', recalcular);
+}</script>
